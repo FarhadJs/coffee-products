@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-// import { Transform } from 'class-transformer';
 
 export type ProductDocument = Product & Document;
 
@@ -18,8 +17,19 @@ export class Product {
   @Prop({ required: true, trim: true })
   product_name: string;
 
-  @Prop({ required: true })
-  image_url: string;
+  @Prop({
+    required: true,
+    type: {
+      data: Buffer,
+      contentType: String,
+      filename: String,
+    },
+  })
+  image: {
+    data: Buffer;
+    contentType: string;
+    filename: string;
+  };
 
   @Prop({ required: true, min: 0 })
   price: number;

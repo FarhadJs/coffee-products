@@ -11,19 +11,24 @@ export class ProductsService {
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
   ) {}
 
-  create(createProductDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     const createdProduct = new this.productModel(createProductDto);
     return createdProduct.save();
   }
 
-  async findAll(): Promise<Product[]> {
-    return this.productModel.find().exec();
+  async findAll() {
+    const products = await this.productModel.find().exec();
+    return products.map((product) => ({
+      ...product.toJSON(),
+      image: `/products/${product._id}/image`,
+      _id: product._id,
+    }));
   }
 
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string) {
     const product = await this.productModel.findById(id).exec();
     if (!product) {
-      throw new Error('Product is not Found!');
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
     return product;
   }
@@ -31,7 +36,7 @@ export class ProductsService {
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
-  ): Promise<Product> {
+  ): Promise<ProductDocument> {
     const updatedProduct = await this.productModel
       .findByIdAndUpdate(id, updateProductDto, { new: true })
       .exec();
@@ -43,11 +48,11 @@ export class ProductsService {
     return updatedProduct;
   }
 
-  async remove(id: string): Promise<Product> {
+  async remove(id: string): Promise<ProductDocument> {
     const deletedProduct = await this.productModel.findByIdAndDelete(id).exec();
 
     if (!deletedProduct) {
-      throw new Error(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Product with ID ${id} not found`);
     }
     return deletedProduct;
   }
