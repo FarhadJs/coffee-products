@@ -1,22 +1,33 @@
-import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsArray,
+  IsOptional,
+  IsMongoId,
+} from 'class-validator';
+import { ProductImage } from '../interfaces/product-image.interface';
 
 export class CreateProductDto {
-  @IsNotEmpty()
   @IsString()
-  product_name: string;
+  name: string;
 
-  @IsNotEmpty()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsNumber()
-  @Min(0)
   price: number;
 
-  @IsNotEmpty()
-  @IsString()
-  product_details: string;
+  @IsOptional()
+  image?: ProductImage;
 
-  image?: {
-    data: Buffer;
-    contentType: string;
-    filename: string;
-  };
+  @IsArray()
+  @IsMongoId({ each: true })
+  @IsOptional()
+  categories?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  ingredients?: string[];
 }
