@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   api:
@@ -7,17 +6,16 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/coffee-shop
-      # Application
+      # - Application
       - PORT=3000
       - NODE_ENV=development
       - APP_URL=http://localhost:3000
-      - # Database
-      - MONGODB_URI=mongodb://localhost:27017/ace-coffee
-      - # JWT
+      # - Database
+      - MONGODB_URI=mongodb://localhost:27018/ace-coffee
+      # - JWT
       - JWT_SECRET=your-secret-key
       - JWT_EXPIRES_IN=7d
-      - # Mail
+      # - Mail
       - MAIL_HOST=smtp.example.com
       - MAIL_USER=your-email
       - MAIL_PASSWORD=your-password
@@ -29,7 +27,7 @@ services:
   mongodb:
     image: mongo:latest
     ports:
-      - "27017:27017"
+      - "27018:27018"
     volumes:
       - mongodb_data:/data/db
 

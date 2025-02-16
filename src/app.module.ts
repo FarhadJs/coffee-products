@@ -8,7 +8,10 @@ import { CategoriesModule } from './categories/categories.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGODB_URI!),
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI ||
+        'mongodb://root:49yPcaKu0kxdSIEe9LVb3hMg@ace-coffee:27017/my-app?authSource=admin',
+    ),
     ProductsModule,
     AuthModule,
     CategoriesModule,

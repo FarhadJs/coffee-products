@@ -3,10 +3,15 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
+import helmet from 'helmet';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Security
+  app.use(helmet());
+  app.use(compression());
   app.setGlobalPrefix('api');
   app.useStaticAssets(join(__dirname, '..', '/dist'));
   app.useGlobalPipes(
