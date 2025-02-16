@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -11,8 +11,43 @@ import { CategoriesService } from '../categories/categories.service';
 export class ProductsService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
-    private readonly categoriesService: CategoriesService,
+    private categoriesService: CategoriesService,
   ) {}
+
+  async findAll(query: FindProductsDto) {
+    const { page = 1, limit = 10, category } = query;
+    const skip = (page - 1) * limit;
+
+    let filterQuery = {};
+
+    if (category) {
+      // پیدا کردن کتگوری با نام (slug)
+      const categoryDoc = await this.categoriesService.findBySlug(category);
+      if (categoryDoc) {
+        filterQuery = { categories: categoryDoc._id };
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      this.productModel
+        .find(filterQuery)
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .exec(),
+      this.productModel.countDocuments(filterQuery),
+    ]);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     if (createProductDto.categories?.length) {
@@ -25,68 +60,6 @@ export class ProductsService {
 
     const createdProduct = new this.productModel(createProductDto);
     return createdProduct.save();
-  }
-
-  async findAll(query?: FindProductsDto) {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      category,
-      minPrice,
-      maxPrice,
-    } = query || {};
-
-    const skip = (page - 1) * limit;
-    const filter: Record<string, any> = {};
-
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    if (category) {
-      filter.categories = new Types.ObjectId(category);
-    }
-
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      filter.price = {
-        ...(minPrice !== undefined && { $gte: minPrice }),
-        ...(maxPrice !== undefined && { $lte: maxPrice }),
-      };
-    }
-
-    const [items, total] = await Promise.all([
-      this.productModel
-        .find(filter)
-        .populate('categories', 'name description image')
-        .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 })
-        .exec(),
-      this.productModel.countDocuments(filter),
-    ]);
-
-    const mappedItems = items.map((product) => {
-      const productObj = product.toObject();
-      return {
-        ...productObj,
-        id: product._id.toString(),
-        image: `/products/${product._id.toString()}/image`,
-      };
-    });
-
-    return {
-      items: mappedItems,
-      meta: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    };
   }
 
   async findOne(id: string): Promise<ProductDocument> {

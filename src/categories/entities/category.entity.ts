@@ -1,23 +1,32 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 
 export type CategoryDocument = Category & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, versionKey: false })
 export class Category {
-  _id: Types.ObjectId;
+  @Prop({ required: true })
+  name: string;
 
   @Prop({ required: true, unique: true })
-  name: string;
+  slug: string;
 
   @Prop()
   description?: string;
-
-  @Prop()
-  image?: string;
 
   @Prop({ default: true })
   isActive: boolean;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
+
+// اضافه کردن pre-save hook برای ایجاد خودکار slug
+CategorySchema.pre('save', function (next) {
+  if (this.isModified('name')) {
+    this.slug = this.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+  next();
+});

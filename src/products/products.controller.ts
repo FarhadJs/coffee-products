@@ -103,11 +103,14 @@ export class ProductsController {
       throw new BadRequestException('Name parameter is required');
     }
     const products = await this.productsService.findByName(name);
-    return products.map((product) => ({
-      ...product.toJSON(),
-      id: product._id.toString(),
-      image: `/products/${product._id.toString()}/image`,
-    }));
+    return {
+      message: 'products',
+      data: products.map((product) => ({
+        ...product.toJSON(),
+        id: product._id.toString(),
+        image: `/products/${product._id.toString()}/image`,
+      })),
+    };
   }
 
   @Get('price-range')

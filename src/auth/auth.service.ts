@@ -12,7 +12,7 @@ import { User, UserDocument } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { UserRole } from 'src/common/enums/user-role.enum';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -94,30 +94,43 @@ export class AuthService {
     return result;
   }
 
-  async createAdmin(createUserDto: CreateUserDto): Promise<{ token: string }> {
-    const { email, password } = createUserDto;
-
-    const userExists = await this.userModel.findOne({ email });
-    if (userExists) {
-      throw new ConflictException('Email already exists');
+  async updateProfile(
+    userId: string,
+    updateProfileDto: UpdateUserDto,
+  ): Promise<Partial<UserDocument>> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
     }
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // اگر ایمیل جدید وارد شده، چک کنیم که تکراری نباشد
+    if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+      const existingUser = await this.userModel.findOne({
+        email: updateProfileDto.email,
+      });
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+      // ایمیل جدید نیاز به تایید دوباره دارد
+      user.isEmailVerified = false;
+    }
 
-    const user = await this.userModel.create({
-      ...createUserDto,
-      password: hashedPassword,
-      role: UserRole.ADMIN,
+    // اگر پسورد جدید وارد شده، هش کنیم
+    if (updateProfileDto.password) {
+      const salt = await bcrypt.genSalt();
+      user.password = await bcrypt.hash(updateProfileDto.password, salt);
+    }
+
+    // آپدیت سایر فیلدها
+    Object.assign(user, {
+      ...updateProfileDto,
+      password: user.password, // استفاده از پسورد هش شده
     });
 
-    const payload: JwtPayload = {
-      sub: user._id.toString(),
-      email: user.email,
-      role: user.role,
-    };
-    const token = this.jwtService.sign(payload);
+    await user.save();
 
-    return { token };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user.toObject();
+    return result;
   }
 }

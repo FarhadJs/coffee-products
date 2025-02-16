@@ -22,6 +22,14 @@ export class CategoriesService {
     return this.categoryModel.find({ isActive: true }).exec();
   }
 
+  async findBySlug(slug: string): Promise<CategoryDocument> {
+    const category = await this.categoryModel.findOne({ slug });
+    if (!category) {
+      throw new NotFoundException(`Category with slug "${slug}" not found`);
+    }
+    return category;
+  }
+
   async findOne(id: string): Promise<CategoryDocument> {
     const category = await this.categoryModel.findById(id).exec();
     if (!category) {

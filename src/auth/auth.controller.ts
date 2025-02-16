@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Patch,
   Body,
   Get,
   UseGuards,
@@ -12,6 +13,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from '../common/decorators/get-user.decorator';
 import { User } from './entities/user.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,5 +33,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   getProfile(@GetUser() user: User) {
     return this.authService.getProfile(user._id.toString());
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(
+    @GetUser() user: User,
+    @Body(ValidationPipe) updateProfileDto: UpdateUserDto,
+  ) {
+    return this.authService.updateProfile(
+      user._id.toString(),
+      updateProfileDto,
+    );
   }
 }
