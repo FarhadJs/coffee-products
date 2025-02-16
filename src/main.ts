@@ -1,13 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe } from '@nestjs/common';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.setGlobalPrefix('api');
+  app.useStaticAssets(join(__dirname, '..', '/dist'));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
   // Only need CORS
-  app.enableCors();
-
+  // app.enableCors();
   await app.listen(process.env.PORT || 3000);
+  console.log(
+    `Application is running on: http://localhost:${process.env.PORT || 3000}`,
+  );
 }
-bootstrap();
+bootstrap().catch((err) =>
+  console.log('to running the server hase problem!:' + err),
+);
