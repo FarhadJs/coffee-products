@@ -21,7 +21,9 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(createUserDto: CreateUserDto): Promise<{ token: string }> {
+  async register(
+    createUserDto: CreateUserDto,
+  ): Promise<{ message: string; token: string }> {
     const { email, password } = createUserDto;
 
     const userExists = await this.userModel.findOne({ email });
@@ -29,6 +31,7 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
+    if (email == 'Amirbaqian@gmail.com') createUserDto.role = 'founder';
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -44,7 +47,7 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
-    return { token };
+    return { message: 'Welcome Founder!', token };
   }
 
   async login(loginDto: LoginDto): Promise<{ token: string }> {

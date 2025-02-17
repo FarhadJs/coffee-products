@@ -19,6 +19,10 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
+  @IsOptional()
+  role: string;
+
+  @IsString()
   @MinLength(8)
   @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message: 'Password is too weak',
