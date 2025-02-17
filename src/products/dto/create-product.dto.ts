@@ -6,8 +6,11 @@ import {
   IsMongoId,
 } from 'class-validator';
 import { ProductImage } from '../interfaces/product-image.interface';
+import { Types } from 'mongoose';
 
 export class CreateProductDto {
+  _id: Types.ObjectId;
+
   @IsString()
   name: string;
 

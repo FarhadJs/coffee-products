@@ -42,24 +42,20 @@ export class ProductsController {
     @UploadedFile() file: Express.Multer.File,
     @Body() createProductDto: CreateProductDto,
   ) {
-    if (!file) {
-      throw new BadRequestException('Image is required');
-    }
-
     const productData = {
       ...createProductDto,
-      image: {
+    };
+    if (file) {
+      productData.image = {
         data: file.buffer,
         contentType: file.mimetype,
         filename: file.originalname,
-      },
-    };
+      };
+    }
 
-    const product = await this.productsService.create(productData);
     return {
-      ...product.toJSON(),
-      id: product._id.toString(),
-      image: `/products/${product._id.toString()}/image`,
+      message: 'محصول با موفقیت ثبت شد',
+      data: await this.productsService.create(productData),
     };
   }
 
@@ -81,6 +77,17 @@ export class ProductsController {
         isActive: product.isActive,
       })),
       meta,
+    };
+  }
+
+  @Get(':id')
+  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
+  async findOne(@Param('id') id: string) {
+    const product = await this.productsService.findOne(id);
+    return {
+      ...product.toJSON(),
+      id: product._id.toString(),
+      image: `/products/${product._id.toString()}/image`,
     };
   }
 
@@ -132,17 +139,6 @@ export class ProductsController {
     }));
   }
 
-  @Get(':id')
-  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
-  async findOne(@Param('id') id: string) {
-    const product = await this.productsService.findOne(id);
-    return {
-      ...product.toJSON(),
-      id: product._id.toString(),
-      image: `/products/${product._id.toString()}/image`,
-    };
-  }
-
   @Patch(':id')
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -164,6 +160,7 @@ export class ProductsController {
 
     const updatedProduct = await this.productsService.update(id, updateData);
     return {
+      message: 'محصول با موفقیت ویرایش شد',
       ...updatedProduct.toJSON(),
       id: updatedProduct._id.toString(),
       image: `/products/${updatedProduct._id.toString()}/image`,
@@ -176,6 +173,7 @@ export class ProductsController {
   async remove(@Param('id') id: string) {
     const deletedProduct = await this.productsService.remove(id);
     return {
+      message: 'محصول با موفقیت حذف شد',
       ...deletedProduct.toJSON(),
       id: deletedProduct._id.toString(),
     };
