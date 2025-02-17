@@ -24,8 +24,11 @@ export class CategoriesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+  async create(@Body() createCategoryDto: CreateCategoryDto) {
+    return {
+      message: 'دسته بندی با موفقیت ثبت شد',
+      data: await this.categoriesService.create(createCategoryDto),
+    };
   }
 
   @Get()
@@ -41,17 +44,23 @@ export class CategoriesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    return this.categoriesService.update(id, updateCategoryDto);
+    return {
+      message: 'دسته بندی با موفقیت آپدیت شد',
+      data: await this.categoriesService.update(id, updateCategoryDto),
+    };
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.FOUNDER)
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+  async remove(@Param('id') id: string) {
+    return {
+      message: 'دسته بندی با موفقیت حذف شد',
+      data: await this.categoriesService.remove(id),
+    };
   }
 }

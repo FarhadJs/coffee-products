@@ -20,9 +20,7 @@ export class ProductsService {
     private categoriesService: CategoriesService,
   ) {}
 
-  async create(
-    createProductDto: CreateProductDto,
-  ): Promise<{ message: string; data: ProductDocument }> {
+  async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
     if (createProductDto.categories?.length) {
       await Promise.all(
         createProductDto.categories.map(async (categoryId) => {
@@ -65,7 +63,8 @@ export class ProductsService {
 
     const createdProduct = new this.productModel(createProductDto);
     const savedProduct = await createdProduct.save();
-    return { message: '', data: savedProduct };
+
+    return savedProduct;
   }
 
   async findAll(query: FindProductsDto) {

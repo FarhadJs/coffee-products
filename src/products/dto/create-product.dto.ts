@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { ProductImage } from '../interfaces/product-image.interface';
 import { Types } from 'mongoose';
+import { ALLOWED_CATEGORIES } from '../../common/constants/categories.constant';
 
 export class CreateProductDto {
   _id: Types.ObjectId;
@@ -28,6 +29,7 @@ export class CreateProductDto {
   @IsMongoId({ each: true })
   @IsOptional()
   categories?: string[];
+  // categories?: (typeof ALLOWED_CATEGORIES)[];
 
   @IsArray()
   @IsString({ each: true })
