@@ -25,6 +25,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
+import { CategoriesService } from '../categories/categories.service';
 import {
   PaginatedResponse,
   ProductResponse,
@@ -32,7 +33,10 @@ import {
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly categoriesService: CategoriesService,
+  ) {}
 
   @Post()
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
@@ -65,6 +69,8 @@ export class ProductsController {
     @Query() query: FindProductsDto,
   ): Promise<PaginatedResponse<ProductResponse>> {
     const { items, meta } = await this.productsService.findAll(query);
+    // console.log(query.category, meta);
+
     return {
       items: items.map((product) => ({
         id: product._id.toString(),
@@ -78,29 +84,6 @@ export class ProductsController {
       })),
       meta,
     };
-  }
-
-  @Get(':id')
-  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
-  async findOne(@Param('id') id: string) {
-    const product = await this.productsService.findOne(id);
-    return {
-      ...product.toJSON(),
-      id: product._id.toString(),
-      image: `/products/${product._id.toString()}/image`,
-    };
-  }
-
-  @Get(':id/image')
-  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
-  async getImage(@Param('id') id: string, @Res() res: Response) {
-    const product = await this.productsService.findOne(id);
-    if (!product?.image?.data) {
-      throw new NotFoundException('Image not found');
-    }
-
-    res.setHeader('Content-Type', product.image.contentType);
-    return res.send(product.image.data);
   }
 
   @Get('search')
@@ -137,6 +120,29 @@ export class ProductsController {
       id: product._id.toString(),
       image: `/products/${product._id.toString()}/image`,
     }));
+  }
+
+  @Get(':id')
+  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
+  async findOne(@Param('id') id: string) {
+    const product = await this.productsService.findOne(id);
+    return {
+      ...product.toJSON(),
+      id: product._id.toString(),
+      image: `/products/${product._id.toString()}/image`,
+    };
+  }
+
+  @Get(':id/image')
+  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
+  async getImage(@Param('id') id: string, @Res() res: Response) {
+    const product = await this.productsService.findOne(id);
+    if (!product?.image?.data) {
+      throw new NotFoundException('Image not found');
+    }
+
+    res.setHeader('Content-Type', product.image.contentType);
+    return res.send(product.image.data);
   }
 
   @Patch(':id')

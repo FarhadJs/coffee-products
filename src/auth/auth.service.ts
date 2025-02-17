@@ -23,7 +23,7 @@ export class AuthService {
 
   async register(
     createUserDto: CreateUserDto,
-  ): Promise<{ message: string; token: string }> {
+  ): Promise<{ message: string; profile: object; token: string }> {
     const { email, password } = createUserDto;
 
     const userExists = await this.userModel.findOne({ email });
@@ -40,17 +40,24 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    const profile = await this.getProfile(user._id.toString());
+
     const payload: JwtPayload = {
       sub: user._id.toString(),
       email: user.email,
       role: user.role,
     };
     const token = this.jwtService.sign(payload);
-
-    return { message: 'Welcome Founder!', token };
+    if (email == 'Amirbaqian@gmail.com')
+      return {
+        message: 'ورودت رو به سیستم کافه ایس تبریک میگم باغیان!',
+        profile,
+        token,
+      };
+    return { message: `خوش آمدی ${user.firstName}!`, profile, token };
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string }> {
+  async login(loginDto: LoginDto): Promise<{ profile: object; token: string }> {
     const { email, password } = loginDto;
     const user = await this.userModel.findOne({ email });
 
@@ -68,6 +75,8 @@ export class AuthService {
       { lastLogin: new Date() },
     );
 
+    const profile = await this.getProfile(user._id.toString());
+
     const payload: JwtPayload = {
       sub: user._id.toString(),
       email: user.email,
@@ -75,7 +84,7 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
-    return { token };
+    return { profile, token };
   }
 
   async validateUser(payload: JwtPayload): Promise<UserDocument> {

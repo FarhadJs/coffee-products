@@ -4,6 +4,7 @@ export type CategoryDocument = Category & Document;
 
 @Schema({ timestamps: true, versionKey: false })
 export class Category {
+  _id: string;
   @Prop({ required: true })
   name: string;
 

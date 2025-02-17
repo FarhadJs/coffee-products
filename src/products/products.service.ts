@@ -1,6 +1,5 @@
 import {
-  HttpException,
-  HttpStatus,
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -21,51 +20,28 @@ export class ProductsService {
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
-    if (createProductDto.categories?.length) {
-      await Promise.all(
-        createProductDto.categories.map(async (categoryId) => {
-          // چک کردن فرمت
-          const category = await this.categoriesService.findOne(categoryId);
-
-          if (!this.categoryFormatRegex.test(category.name)) {
-            throw new HttpException(
-              {
-                status: HttpStatus.BAD_REQUEST,
-                error: 'Invalid category format',
-                message:
-                  'Category names must be lowercase, hyphen-separated words (e.g., "hot-drinks")',
-                example: 'hot-drinks, iced-coffee, pastries',
-              },
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-
-          const allowedCategories = [
-            'hot-drinks',
-            'cold-drinks',
-            'pastries',
-            'desserts',
-          ];
-          if (!allowedCategories.includes(category.name)) {
-            throw new HttpException(
-              {
-                status: HttpStatus.BAD_REQUEST,
-                error: 'Invalid category',
-                message: 'Category must be one of the allowed categories',
-                allowedCategories,
-              },
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-        }),
-      );
+    // اول چک می‌کنیم که آیا همه دسته‌بندی‌ها وجود دارند
+    const categoryIds: string[] = [];
+    for (const categoryName of createProductDto.categories!) {
+      try {
+        const category = await this.categoriesService.findBySlug(categoryName);
+        categoryIds.push(category._id);
+      } catch (error) {
+        throw new BadRequestException(
+          `Category "${categoryName}" not found\n` + error,
+        );
+      }
     }
 
-    const createdProduct = new this.productModel(createProductDto);
-    const savedProduct = await createdProduct.save();
+    // حالا محصول رو با ObjectId های دسته‌بندی‌ها می‌سازیم
+    const product = await this.productModel.create({
+      ...createProductDto,
+      categories: categoryIds,
+    });
 
-    return savedProduct;
+    return product;
   }
+  // ... سایر متدها
 
   async findAll(query: FindProductsDto) {
     const { page = 1, limit = 10, category } = query;
@@ -74,16 +50,33 @@ export class ProductsService {
     let filterQuery = {};
 
     if (category) {
-      // پیدا کردن کتگوری با نام (slug)
-      const categoryDoc = await this.categoriesService.findBySlug(category);
-      if (categoryDoc) {
-        filterQuery = { categories: categoryDoc._id };
+      try {
+        // پیدا کردن کتگوری با slug
+        const categoryDoc = await this.categoriesService.findBySlug(category);
+        if (categoryDoc) {
+          filterQuery = { categories: { $in: [categoryDoc._id] } };
+        }
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          // اگر کتگوری پیدا نشد، آرایه خالی برمی‌گردانیم
+          return {
+            items: [],
+            meta: {
+              total: 0,
+              page,
+              limit,
+              pages: 0,
+            },
+          };
+        }
+        throw error;
       }
     }
 
     const [items, total] = await Promise.all([
       this.productModel
         .find(filterQuery)
+        .populate('categories', 'name slug description')
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })

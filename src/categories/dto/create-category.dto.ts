@@ -18,8 +18,8 @@ export class CreateCategoryDto {
   description?: string;
 
   @IsString()
-  @IsOptional()
-  image?: string;
+  @IsNotEmpty({ message: 'slug is required' })
+  slug: string;
 
   @IsBoolean()
   @IsOptional()

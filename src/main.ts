@@ -12,7 +12,7 @@ async function bootstrap() {
   app.use(compression());
   app.setGlobalPrefix('api');
   // Only need CORS
-  // app.enableCors();
+  app.enableCors();
   await app.listen(process.env.PORT || 3000);
   console.log(
     `Application is running on: http://localhost:${process.env.PORT || 3000}`,

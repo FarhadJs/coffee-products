@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -8,7 +9,7 @@ import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { generateSlug } from '../common/utils/slug.util';
+// import { generateSlug } from '../common/utils/slug.util';
 
 @Injectable()
 export class CategoriesService {
@@ -19,17 +20,22 @@ export class CategoriesService {
   async create(
     createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryDocument> {
-    const slug = generateSlug(createCategoryDto.name);
-
     // Check if slug already exists
-    const existingCategory = await this.categoryModel.findOne({ slug });
+    const existingCategory = await this.categoryModel.findOne({
+      slug: createCategoryDto.slug,
+    });
     if (existingCategory) {
-      throw new ConflictException('Category with this name already exists');
+      throw new ConflictException(
+        `دسته بندی(${createCategoryDto.slug})قبلاً تعریف شده است!`,
+      );
+    }
+
+    if (createCategoryDto.slug == '') {
+      throw new BadRequestException('slug is required!');
     }
 
     const category = await this.categoryModel.create({
       ...createCategoryDto,
-      slug,
     });
 
     return category;

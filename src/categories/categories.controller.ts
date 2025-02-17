@@ -8,6 +8,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -25,6 +26,9 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
   async create(@Body() createCategoryDto: CreateCategoryDto) {
+    if (!createCategoryDto.slug) {
+      throw new BadRequestException('دسته بندی باید در یک گروه اسمی تعریف شود');
+    }
     return {
       message: 'دسته بندی با موفقیت ثبت شد',
       data: await this.categoriesService.create(createCategoryDto),

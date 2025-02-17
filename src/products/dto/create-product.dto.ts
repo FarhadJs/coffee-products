@@ -1,17 +1,9 @@
-import {
-  IsString,
-  IsNumber,
-  IsArray,
-  IsOptional,
-  IsMongoId,
-} from 'class-validator';
+import { IsString, IsNumber, IsArray, IsOptional, Min } from 'class-validator';
 import { ProductImage } from '../interfaces/product-image.interface';
-import { Types } from 'mongoose';
-import { ALLOWED_CATEGORIES } from '../../common/constants/categories.constant';
+// import { Types } from 'mongoose';
+// import { ALLOWED_CATEGORIES } from '../../common/constants/categories.constant';
 
 export class CreateProductDto {
-  _id: Types.ObjectId;
-
   @IsString()
   name: string;
 
@@ -20,13 +12,14 @@ export class CreateProductDto {
   description?: string;
 
   @IsNumber()
+  @Min(0)
   price: number;
 
   @IsOptional()
   image?: ProductImage;
 
   @IsArray()
-  @IsMongoId({ each: true })
+  @IsString({ each: true })
   @IsOptional()
   categories?: string[];
   // categories?: (typeof ALLOWED_CATEGORIES)[];
