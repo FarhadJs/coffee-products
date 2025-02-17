@@ -9,7 +9,7 @@ import { CategoriesModule } from './categories/categories.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(
-      process.env.MONGODB_URI ||
+      process.env.MONGODB_URL ||
         'mongodb://root:49yPcaKu0kxdSIEe9LVb3hMg@ace-coffee:27017/my-app?authSource=admin',
     ),
     ProductsModule,

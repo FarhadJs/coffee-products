@@ -31,12 +31,12 @@ import {
 } from './interfaces/product-response.interface';
 
 @Controller('products')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -145,6 +145,7 @@ export class ProductsController {
 
   @Patch(':id')
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: string,
@@ -171,6 +172,7 @@ export class ProductsController {
 
   @Delete(':id')
   @Roles(UserRole.FOUNDER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: string) {
     const deletedProduct = await this.productsService.remove(id);
     return {

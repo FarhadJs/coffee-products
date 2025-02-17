@@ -34,8 +34,8 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.categoriesService.findOne(id);
   }
 
   @Patch(':id')
