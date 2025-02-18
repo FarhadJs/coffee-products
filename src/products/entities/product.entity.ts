@@ -32,11 +32,11 @@ export class Product {
     filename: string;
   };
 
-  @Prop()
+  @Prop({ type: String })
   imagePath?: string;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Category' })
-  categories: Types.ObjectId[];
+  @Prop({ type: [String], ref: 'Category' })
+  categories: string[];
 
   @Prop({ type: [String], default: [] })
   ingredients: string[];

@@ -10,12 +10,9 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  Res,
-  NotFoundException,
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -51,7 +48,7 @@ export class ProductsController {
       image: file
         ? { data: file.buffer, contentType: file.mimetype }
         : undefined,
-      imagePath: file ? file.filename : '',
+      imagePath: file ? `uploads/${file.filename}` : '',
     };
 
     const product = await this.productsService.create(productData);
@@ -69,11 +66,11 @@ export class ProductsController {
 
     return {
       items: items.map((product) => ({
-        id: product._id.toString(),
+        _id: product._id.toString(),
         name: product.name,
         description: product.description,
         price: product.price,
-        imagePath: `uploads/${product.imagePath || ''}`,
+        imagePath: product.imagePath || '',
         categories: product.categories,
         ingredients: product.ingredients,
         isActive: product.isActive,
@@ -124,21 +121,8 @@ export class ProductsController {
     const product = await this.productsService.findOne(id);
     return {
       ...product.toJSON(),
-      id: product._id.toString(),
       image: `uploads/${product.imagePath}`,
     };
-  }
-
-  @Get(':id/image')
-  @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
-  async getImage(@Param('id') id: string, @Res() res: Response) {
-    const product = await this.productsService.findOne(id);
-    if (!product?.image?.data) {
-      throw new NotFoundException('Image not found');
-    }
-
-    res.setHeader('Content-Type', product.image.contentType);
-    return res.send(product.image.data);
   }
 
   @Patch(':id')
@@ -155,6 +139,7 @@ export class ProductsController {
       image: file
         ? { data: file.buffer, contentType: file.mimetype }
         : undefined,
+      imagePath: file ? `uploads/${file.filename}` : '',
     };
 
     const updatedProduct = await this.productsService.update(id, updateData);

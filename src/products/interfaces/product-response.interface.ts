@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+// import { Types } from 'mongoose';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -11,12 +11,12 @@ export interface PaginatedResponse<T> {
 }
 
 export interface ProductResponse {
-  id: string;
+  _id: string;
   name: string;
   description?: string;
   price: number;
   imagePath: string;
-  categories: Types.ObjectId[];
+  categories: string[];
   ingredients: string[];
   isActive: boolean;
 }

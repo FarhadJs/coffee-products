@@ -19,20 +19,19 @@ export class ProductsService {
     private categoriesService: CategoriesService,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
-    const categoryIds: Types.ObjectId[] = [];
+  async create(createProductDto: CreateProductDto) {
+    const categorySlugs: string[] = [];
 
     for (const categoryName of createProductDto.categories!) {
       const category = await this.categoriesService.findBySlug(categoryName);
       if (!Types.ObjectId.isValid(category._id)) {
         throw new BadRequestException(`Invalid category ID: ${category._id}`);
       }
-      categoryIds.push(new Types.ObjectId(category._id));
+      categorySlugs.push(category.slug);
     }
-
     const product = await this.productModel.create({
       ...createProductDto,
-      categories: categoryIds,
+      categories: categorySlugs,
       imagePath: createProductDto.imagePath, // Ensure imagePath is saved
     });
 
@@ -97,15 +96,14 @@ export class ProductsService {
   ): Promise<ProductDocument> {
     if (updateProductDto.categories?.length) {
       await Promise.all(
-        updateProductDto.categories.map((categoryId) =>
-          this.categoriesService.findOne(categoryId),
-        ),
+        updateProductDto.categories.map((categorySlug) => {
+          void this.categoriesService.findBySlug(categorySlug);
+        }),
       );
     }
-
+    if (updateProductDto.imagePath == '') delete updateProductDto.imagePath;
     const updatedProduct = await this.productModel
       .findByIdAndUpdate(id, updateProductDto, { new: true })
-      .populate('categories', 'name description image')
       .exec();
 
     if (!updatedProduct) {

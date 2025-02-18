@@ -23,6 +23,9 @@ export class Category {
   @Prop()
   description?: string;
 
+  @Prop({ required: true, unique: true })
+  slug: string;
+
   @Prop()
   image?: string;
 }
