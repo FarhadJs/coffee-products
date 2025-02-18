@@ -1,4 +1,3 @@
-// src/categories/dto/create-category.dto.ts
 import {
   IsString,
   IsOptional,
@@ -24,4 +23,10 @@ export class CreateCategoryDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  image?: {
+    data: Buffer;
+    contentType: string;
+    filename: string;
+  };
 }
