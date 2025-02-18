@@ -10,8 +10,8 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Security
-  app.use(helmet());
-  app.use(compression());
+  // app.use(helmet());
+  // app.use(compression());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -20,7 +20,8 @@ async function bootstrap() {
     }),
   );
   // Only need CORS
-  // app.enableCors();
+  app.enableCors();
+
   app.setGlobalPrefix('api');
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
