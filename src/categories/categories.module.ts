@@ -5,13 +5,14 @@ import { CategoriesService } from './categories.service';
 import { CategoriesController } from './categories.controller';
 import { Category, CategorySchema } from './entities/category.entity';
 import { MulterModule } from '@nestjs/platform-express';
+import { multerOptions } from 'src/common/multer.config';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Category.name, schema: CategorySchema },
     ]),
-    MulterModule.register(),
+    MulterModule.register(multerOptions),
   ],
   controllers: [CategoriesController],
   providers: [CategoriesService],

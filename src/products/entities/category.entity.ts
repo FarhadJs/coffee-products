@@ -1,4 +1,3 @@
-// src/products/entities/category.entity.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 

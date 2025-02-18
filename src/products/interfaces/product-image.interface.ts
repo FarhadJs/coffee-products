@@ -1,5 +1,5 @@
 export interface ProductImage {
   data: Buffer;
   contentType: string;
-  filename: string;
+  filename?: string;
 }

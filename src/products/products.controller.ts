@@ -39,8 +39,8 @@ export class ProductsController {
   ) {}
 
   @Post()
-  @Roles(UserRole.FOUNDER, UserRole.ADMIN)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(UserRole.FOUNDER, UserRole.ADMIN)
+  // @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -48,28 +48,24 @@ export class ProductsController {
   ) {
     const productData = {
       ...createProductDto,
+      image: file
+        ? { data: file.buffer, contentType: file.mimetype }
+        : undefined,
+      imagePath: file ? file.filename : '',
     };
-    if (file) {
-      productData.image = {
-        data: file.buffer,
-        contentType: file.mimetype,
-        filename: file.originalname,
-      };
-    }
 
+    const product = await this.productsService.create(productData);
     return {
       message: 'محصول با موفقیت ثبت شد',
-      data: await this.productsService.create(productData),
+      data: product,
     };
   }
-
   @Get()
   @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
   async findAll(
     @Query() query: FindProductsDto,
   ): Promise<PaginatedResponse<ProductResponse>> {
     const { items, meta } = await this.productsService.findAll(query);
-    // console.log(query.category, meta);
 
     return {
       items: items.map((product) => ({
@@ -77,7 +73,7 @@ export class ProductsController {
         name: product.name,
         description: product.description,
         price: product.price,
-        image: `/products/${product._id.toString()}/image`,
+        imagePath: `uploads/${product.imagePath || ''}`,
         categories: product.categories,
         ingredients: product.ingredients,
         isActive: product.isActive,
@@ -98,7 +94,7 @@ export class ProductsController {
       data: products.map((product) => ({
         ...product.toJSON(),
         id: product._id.toString(),
-        image: `/products/${product._id.toString()}/image`,
+        imagePth: `uploads/${product.imagePath}`,
       })),
     };
   }
@@ -118,7 +114,7 @@ export class ProductsController {
     return products.map((product) => ({
       ...product.toJSON(),
       id: product._id.toString(),
-      image: `/products/${product._id.toString()}/image`,
+      imagePath: `uploads/${product.imagePath}`,
     }));
   }
 
@@ -129,7 +125,7 @@ export class ProductsController {
     return {
       ...product.toJSON(),
       id: product._id.toString(),
-      image: `/products/${product._id.toString()}/image`,
+      image: `uploads/${product.imagePath}`,
     };
   }
 
@@ -146,30 +142,25 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.FOUNDER, UserRole.ADMIN)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(UserRole.FOUNDER, UserRole.ADMIN)
+  // @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const updateData = { ...updateProductDto };
-
-    if (file) {
-      updateData.image = {
-        data: file.buffer,
-        contentType: file.mimetype,
-        filename: file.originalname,
-      };
-    }
+    const updateData = {
+      ...updateProductDto,
+      image: file
+        ? { data: file.buffer, contentType: file.mimetype }
+        : undefined,
+    };
 
     const updatedProduct = await this.productsService.update(id, updateData);
     return {
       message: 'محصول با موفقیت ویرایش شد',
-      ...updatedProduct.toJSON(),
-      id: updatedProduct._id.toString(),
-      image: `/products/${updatedProduct._id.toString()}/image`,
+      data: updatedProduct,
     };
   }
 

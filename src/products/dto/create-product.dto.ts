@@ -18,6 +18,9 @@ export class CreateProductDto {
   @IsOptional()
   image?: ProductImage;
 
+  @IsString()
+  imagePath: string;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

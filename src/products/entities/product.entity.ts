@@ -32,6 +32,9 @@ export class Product {
     filename: string;
   };
 
+  @Prop()
+  imagePath?: string;
+
   @Prop({ type: [Types.ObjectId], ref: 'Category' })
   categories: Types.ObjectId[];
 

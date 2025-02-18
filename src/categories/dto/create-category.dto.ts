@@ -24,9 +24,6 @@ export class CreateCategoryDto {
   @IsOptional()
   isActive?: boolean;
 
-  image?: {
-    data: Buffer;
-    contentType: string;
-    filename: string;
-  };
+  @IsOptional()
+  imagePath?: string; // Add this line
 }

@@ -4,88 +4,54 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Product, ProductDocument } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FindProductsDto } from './dto/find-products.dto';
 import { CategoriesService } from '../categories/categories.service';
+import { PaginatedResponse } from './interfaces/product-response.interface';
 
 @Injectable()
 export class ProductsService {
-  private readonly categoryFormatRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
     private categoriesService: CategoriesService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
-    // اول چک می‌کنیم که آیا همه دسته‌بندی‌ها وجود دارند
-    const categoryIds: string[] = [];
+    const categoryIds: Types.ObjectId[] = [];
+
     for (const categoryName of createProductDto.categories!) {
-      try {
-        const category = await this.categoriesService.findBySlug(categoryName);
-        categoryIds.push(category._id);
-      } catch (error) {
-        throw new BadRequestException(
-          `Category "${categoryName}" not found\n` + error,
-        );
+      const category = await this.categoriesService.findBySlug(categoryName);
+      if (!Types.ObjectId.isValid(category._id)) {
+        throw new BadRequestException(`Invalid category ID: ${category._id}`);
       }
+      categoryIds.push(new Types.ObjectId(category._id));
     }
 
-    // حالا محصول رو با ObjectId های دسته‌بندی‌ها می‌سازیم
     const product = await this.productModel.create({
       ...createProductDto,
       categories: categoryIds,
+      imagePath: createProductDto.imagePath, // Ensure imagePath is saved
     });
 
     return product;
   }
-  // ... سایر متدها
 
-  async findAll(query: FindProductsDto) {
-    const { page = 1, limit = 10, category } = query;
-    const skip = (page - 1) * limit;
-
-    let filterQuery = {};
-
-    if (category) {
-      try {
-        // پیدا کردن کتگوری با slug
-        const categoryDoc = await this.categoriesService.findBySlug(category);
-        if (categoryDoc) {
-          filterQuery = { categories: { $in: [categoryDoc._id] } };
-        }
-      } catch (error) {
-        if (error instanceof NotFoundException) {
-          // اگر کتگوری پیدا نشد، آرایه خالی برمی‌گردانیم
-          return {
-            items: [],
-            meta: {
-              total: 0,
-              page,
-              limit,
-              pages: 0,
-            },
-          };
-        }
-        throw error;
-      }
-    }
-
-    const [items, total] = await Promise.all([
-      this.productModel
-        .find(filterQuery)
-        .populate('categories', 'name slug description')
-        .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 })
-        .exec(),
-      this.productModel.countDocuments(filterQuery),
-    ]);
+  async findAll(
+    query: FindProductsDto,
+  ): Promise<PaginatedResponse<ProductDocument>> {
+    const { page = 1, limit = 10 } = query; // تعیین مقادیر پیش‌فرض
+    const products = await this.productModel
+      .find()
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+    const total = await this.productModel.countDocuments();
 
     return {
-      items,
+      items: products,
       meta: {
         total,
         page,
@@ -96,15 +62,10 @@ export class ProductsService {
   }
 
   async findOne(id: string): Promise<ProductDocument> {
-    const product = await this.productModel
-      .findById(id)
-      .populate('categories', 'name description image')
-      .exec();
-
+    const product = await this.productModel.findById(id);
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException('Product not found');
     }
-
     return product;
   }
 

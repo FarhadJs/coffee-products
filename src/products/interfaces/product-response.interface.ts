@@ -15,7 +15,7 @@ export interface ProductResponse {
   name: string;
   description?: string;
   price: number;
-  image: string;
+  imagePath: string;
   categories: Types.ObjectId[];
   ingredients: string[];
   isActive: boolean;

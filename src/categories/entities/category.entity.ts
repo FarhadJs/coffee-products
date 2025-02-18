@@ -22,8 +22,8 @@ export class Category {
   @Prop()
   description?: string;
 
-  @Prop({ type: Object })
-  image?: CategoryImage;
+  @Prop({ type: String })
+  imagePath?: string;
 
   @Prop({ default: true })
   isActive: boolean;

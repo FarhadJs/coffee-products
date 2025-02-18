@@ -7,14 +7,14 @@ import {
   Param,
   Delete,
   UseGuards,
-  BadRequestException,
+  // BadRequestException,
   UseInterceptors,
   UploadedFile,
-  Res,
-  NotFoundException,
+  // Res,
+  // NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+// import { Response } from 'express';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -35,17 +35,13 @@ export class CategoriesController {
     @Body() createCategoryDto: CreateCategoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    if (!createCategoryDto.slug) {
-      throw new BadRequestException('دسته بندی باید در یک گروه اسمی تعریف شود');
-    }
-
     const categoryData = {
       ...createCategoryDto,
       image: file
         ? {
             data: file.buffer,
             contentType: file.mimetype,
-            filename: file.originalname,
+            filename: file.filename,
           }
         : undefined,
     };
@@ -53,22 +49,8 @@ export class CategoriesController {
     const category = await this.categoriesService.create(categoryData);
     return {
       message: 'دسته بندی با موفقیت ثبت شد',
-      data: {
-        ...category.toJSON(),
-        image: category.image ? `/categories/${category._id}/image` : undefined,
-      },
+      data: category,
     };
-  }
-
-  @Get(':id/image')
-  async getImage(@Param('id') id: string, @Res() res: Response) {
-    const category = await this.categoriesService.findOne(id);
-    if (!category?.image?.data) {
-      throw new NotFoundException('Image not found');
-    }
-
-    res.setHeader('Content-Type', category.image.contentType);
-    return res.send(category.image.data);
   }
 
   @Get()
@@ -76,7 +58,7 @@ export class CategoriesController {
     const categories = await this.categoriesService.findAll();
     return categories.map((category) => ({
       ...category.toJSON(),
-      image: category.image ? `/categories/${category._id}/image` : undefined,
+      image: category.imagePath ? `/${category.imagePath}` : undefined, // Update this line
     }));
   }
 
@@ -85,12 +67,12 @@ export class CategoriesController {
     const category = await this.categoriesService.findOne(id);
     return {
       ...category.toJSON(),
-      image: category.image ? `/categories/${category._id}/image` : undefined,
+      image: category.imagePath ? `/${category.imagePath}` : undefined,
     };
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  // @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
   @UseInterceptors(FileInterceptor('image'))
   async update(
@@ -104,18 +86,15 @@ export class CategoriesController {
         ? {
             data: file.buffer,
             contentType: file.mimetype,
-            filename: file.originalname,
+            filename: file.filename,
           }
         : undefined,
     };
 
     const category = await this.categoriesService.update(id, updateData);
     return {
-      message: 'دسته بندی با موفقیت آپدیت شد',
-      data: {
-        ...category.toJSON(),
-        image: category.image ? `/categories/${category._id}/image` : undefined,
-      },
+      message: 'دسته بندی با موفقیت ویرایش شد',
+      data: category,
     };
   }
 
@@ -128,7 +107,7 @@ export class CategoriesController {
       message: 'دسته بندی با موفقیت حذف شد',
       data: {
         ...category.toJSON(),
-        image: category.image ? `/categories/${category._id}/image` : undefined,
+        image: category.imagePath ? `/${category.imagePath}` : undefined,
       },
     };
   }
