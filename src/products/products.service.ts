@@ -41,9 +41,10 @@ export class ProductsService {
   async findAll(
     query: FindProductsDto,
   ): Promise<PaginatedResponse<ProductDocument>> {
-    const { page = 1, limit = 10 } = query; // تعیین مقادیر پیش‌فرض
+    const { page = 1, limit = 10 } = query;
     const products = await this.productModel
       .find()
+      .sort({ createdAt: -1 }) // Sort by createdAt field in descending order
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
