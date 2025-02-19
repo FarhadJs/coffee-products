@@ -12,6 +12,9 @@ export class CreateProductDto {
   @IsString()
   price: number;
 
+  @IsString()
+  discount: number;
+
   @IsOptional()
   @IsObject()
   image?: ProductImage;

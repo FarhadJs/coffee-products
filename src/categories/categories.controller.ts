@@ -66,7 +66,7 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  // @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
   @UseInterceptors(FileInterceptor('image'))
   async update(
@@ -83,8 +83,8 @@ export class CategoriesController {
             filename: file.filename,
           }
         : undefined,
+      imagePath: file ? `uploads/${file.filename}` : '',
     };
-
     const category = await this.categoriesService.update(id, updateData);
     return {
       message: 'دسته بندی با موفقیت ویرایش شد',

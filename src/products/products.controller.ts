@@ -22,7 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
-import { CategoriesService } from '../categories/categories.service';
+// import { CategoriesService } from '../categories/categories.service';
 import {
   PaginatedResponse,
   ProductResponse,
@@ -30,14 +30,11 @@ import {
 
 @Controller('products')
 export class ProductsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly categoriesService: CategoriesService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  // @Roles(UserRole.FOUNDER, UserRole.ADMIN)
-  // @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.FOUNDER, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -126,8 +123,8 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  // @Roles(UserRole.FOUNDER, UserRole.ADMIN)
-  // @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.FOUNDER, UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id') id: string,

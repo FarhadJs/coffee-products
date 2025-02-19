@@ -19,6 +19,9 @@ export class Product {
   @Prop({ required: true })
   price: number;
 
+  @Prop({ required: true })
+  discount: number;
+
   @Prop({
     type: {
       data: Buffer,
