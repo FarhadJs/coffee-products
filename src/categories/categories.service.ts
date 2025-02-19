@@ -19,7 +19,6 @@ export class CategoriesService {
 
   async create(
     createCategoryDto: CreateCategoryDto,
-    file?: Express.Multer.File,
   ): Promise<CategoryDocument> {
     // Check if slug already exists
     const existingCategory = await this.categoryModel.findOne({
@@ -35,14 +34,9 @@ export class CategoriesService {
       throw new BadRequestException('slug is required!');
     }
 
-    let imagePath = '';
-    if (file) {
-      imagePath = `uploads/${file.filename}`; // Set the image path
-    }
-
     const category = await this.categoryModel.create({
       ...createCategoryDto,
-      imagePath, // Save the image path
+      imagePath: createCategoryDto.imagePath, // Save the image path
     });
 
     return category;
@@ -72,6 +66,7 @@ export class CategoriesService {
     id: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryDocument> {
+    if (updateCategoryDto.imagePath == '') delete updateCategoryDto.imagePath;
     const updatedCategory = await this.categoryModel
       .findByIdAndUpdate(id, updateCategoryDto, { new: true })
       .exec();

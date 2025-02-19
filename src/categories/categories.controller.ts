@@ -37,13 +37,7 @@ export class CategoriesController {
   ) {
     const categoryData = {
       ...createCategoryDto,
-      image: file
-        ? {
-            data: file.buffer,
-            contentType: file.mimetype,
-            filename: file.filename,
-          }
-        : undefined,
+      imagePath: file ? `uploads/${file.filename}` : '',
     };
 
     const category = await this.categoriesService.create(categoryData);
