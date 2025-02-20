@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import helmet from 'helmet';
-import * as compression from 'compression';
+// import helmet from 'helmet';
+// import * as compression from 'compression';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
 
@@ -20,7 +20,11 @@ async function bootstrap() {
     }),
   );
   // Only need CORS
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
 
   app.setGlobalPrefix('api');
 
