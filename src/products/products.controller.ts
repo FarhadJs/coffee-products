@@ -46,7 +46,19 @@ export class ProductsController {
         ? { data: file.buffer, contentType: file.mimetype }
         : undefined,
       imagePath: file ? `uploads/${file.filename}` : '',
+      price: isNaN(Number(createProductDto.price))
+        ? 0
+        : Number(createProductDto.price),
+      discount: isNaN(Number(createProductDto.discount))
+        ? 0
+        : Number(createProductDto.discount),
     };
+    if (
+      isNaN(Number(createProductDto.price)) &&
+      isNaN(Number(createProductDto.price))
+    ) {
+      throw new BadRequestException('قیمت و تخفیف باید به صورت عدد وارد کنید');
+    }
 
     const product = await this.productsService.create(productData);
     return {
@@ -54,6 +66,7 @@ export class ProductsController {
       data: product,
     };
   }
+
   @Get()
   @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
   async findAll(
