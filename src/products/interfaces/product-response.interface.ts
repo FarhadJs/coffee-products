@@ -14,7 +14,8 @@ export interface ProductResponse {
   _id: string;
   name: string;
   description?: string;
-  price: number;
+  price: string;
+  discount: string;
   imagePath: string;
   categories: string[];
   ingredients: string[];

@@ -41,14 +41,23 @@ export class ProductsService {
   async findAll(
     query: FindProductsDto,
   ): Promise<PaginatedResponse<ProductDocument>> {
-    const { page = 1, limit = 10 } = query;
+    const { page = 1, limit = 10, category } = query;
+    const filter: { categories?: string } = {};
+
+    if (category) {
+      const categoryEntity = await this.categoriesService.findBySlug(category);
+      if (!categoryEntity) {
+        throw new NotFoundException(`Category with slug ${category} not found`);
+      }
+      filter.categories = categoryEntity.slug;
+    }
     const products = await this.productModel
-      .find()
+      .find(filter)
       .sort({ createdAt: -1 }) // Sort by createdAt field in descending order
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
-    const total = await this.productModel.countDocuments();
+    const total = await this.productModel.countDocuments(filter);
 
     return {
       items: products,

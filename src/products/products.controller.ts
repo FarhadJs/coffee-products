@@ -67,6 +67,7 @@ export class ProductsController {
         name: product.name,
         description: product.description,
         price: product.price,
+        discount: product.discount,
         imagePath: product.imagePath || '',
         categories: product.categories,
         ingredients: product.ingredients,

@@ -17,10 +17,10 @@ export class Product {
   description?: string;
 
   @Prop({ required: true })
-  price: number;
+  price: string;
 
-  @Prop({ required: true })
-  discount: number;
+  @Prop()
+  discount: string;
 
   @Prop({
     type: {

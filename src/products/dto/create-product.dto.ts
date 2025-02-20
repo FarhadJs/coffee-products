@@ -10,10 +10,11 @@ export class CreateProductDto {
   description?: string;
 
   @IsString()
-  price: number;
+  price: string;
 
   @IsString()
-  discount: number;
+  @IsOptional()
+  discount: string;
 
   @IsOptional()
   @IsObject()
