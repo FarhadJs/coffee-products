@@ -78,10 +78,31 @@ export class ProductsService {
     return product;
   }
 
-  async findByName(name: string): Promise<ProductDocument[]> {
-    return await this.productModel
+  async findByName(
+    name: string,
+    query: FindProductsDto,
+  ): Promise<PaginatedResponse<ProductDocument>> {
+    const { page = 1, limit = 10 } = query;
+
+    const search_products = await this.productModel
       .find({ name: { $regex: name, $options: 'i' } }) // Case-insensitive search
+      .skip((page - 1) * limit)
+      .limit(limit)
       .exec();
+
+    const total = await this.productModel.countDocuments({
+      name: { $regex: name, $options: 'i' },
+    });
+
+    return {
+      items: search_products,
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findByPriceRange(

@@ -92,11 +92,11 @@ export class ProductsController {
 
   @Get('search')
   @Roles(UserRole.FOUNDER, UserRole.ADMIN, UserRole.STAFF, UserRole.USER)
-  async search(@Query('name') name: string) {
+  async search(@Query('name') name: string, @Query() query: FindProductsDto) {
     if (!name) {
       throw new BadRequestException('Name parameter is required');
     }
-    const products = await this.productsService.findByName(name);
+    const products = await this.productsService.findByName(name, query);
     return {
       message: 'products',
       data: products,
