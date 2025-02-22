@@ -53,7 +53,7 @@ export class ProductsService {
     }
     const products = await this.productModel
       .find(filter)
-      .sort({ createdAt: -1 }) // Sort by createdAt field in descending order
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .exec();
@@ -79,9 +79,8 @@ export class ProductsService {
   }
 
   async findByName(name: string): Promise<ProductDocument[]> {
-    return this.productModel
-      .find({ name: { $regex: name, $options: 'i' } })
-      .populate('categories', 'name description image')
+    return await this.productModel
+      .find({ name: { $regex: name, $options: 'i' } }) // Case-insensitive search
       .exec();
   }
 

@@ -99,11 +99,7 @@ export class ProductsController {
     const products = await this.productsService.findByName(name);
     return {
       message: 'products',
-      data: products.map((product) => ({
-        ...product.toJSON(),
-        id: product._id.toString(),
-        imagePth: `uploads/${product.imagePath}`,
-      })),
+      data: products,
     };
   }
 
