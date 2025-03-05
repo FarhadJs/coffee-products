@@ -9,7 +9,6 @@ import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-// import { generateSlug } from '../common/utils/slug.util';
 
 @Injectable()
 export class CategoriesService {
