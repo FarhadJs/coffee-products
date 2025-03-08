@@ -49,6 +49,9 @@ export class User {
 
   @Prop()
   lastLogin?: Date;
+
+  @Prop()
+  social_link: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -8,12 +8,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from '../common/decorators/get-user.decorator';
-import { User } from './entities/user.entity';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from '../users/entities/user.entity';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 
 @Controller('auth')
 export class AuthController {

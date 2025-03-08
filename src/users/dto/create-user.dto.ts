@@ -4,7 +4,9 @@ import {
   MinLength,
   IsOptional,
   Matches,
+  IsObject,
 } from 'class-validator';
+import { ProductImage } from 'src/products/interfaces/product-image.interface';
 
 export class CreateUserDto {
   @IsString()
@@ -18,9 +20,21 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
+  @IsOptional()
+  @IsObject()
+  image?: ProductImage;
+
+  @IsString()
+  @IsOptional()
+  imagePath?: string;
+
   @IsString()
   @IsOptional()
   role: string;
+
+  @IsString()
+  @IsOptional()
+  social_link: string;
 
   @IsString()
   @MinLength(8)
