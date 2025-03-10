@@ -1,6 +1,5 @@
 import { IsString, IsArray, IsOptional, IsObject } from 'class-validator';
 import { ProductImage } from '../interfaces/product-image.interface';
-
 export class CreateProductDto {
   @IsString()
   name: string;
