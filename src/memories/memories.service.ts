@@ -7,6 +7,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Memory, MemoryDocument } from './entities/memory.entity';
 import { CreateMemoryDto } from './dto/create-memory.dto';
+import { FindMemoriesDto } from './dto/find-memories.dto';
+import { PaginatedResponse } from 'src/products/interfaces/product-response.interface';
 
 @Injectable()
 export class MemoriesService {
@@ -22,12 +24,48 @@ export class MemoriesService {
     return { message: 'یادگاری با موفقیت ثبت شد', data: createdMemory };
   }
 
-  async findAll(): Promise<Memory[]> {
-    return await this.memoryModel.find({ isApproved: true }).exec();
+  async findAll(
+    query: FindMemoriesDto,
+  ): Promise<PaginatedResponse<MemoryDocument>> {
+    const { page = 1, limit = 10 } = query;
+    const total = await this.memoryModel.countDocuments({ isApproved: true });
+
+    return {
+      items: await this.memoryModel
+        .find({ isApproved: true })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
   }
 
-  async findMemories(): Promise<Memory[]> {
-    return await this.memoryModel.find().exec();
+  async findMemories(
+    query: FindMemoriesDto,
+  ): Promise<PaginatedResponse<MemoryDocument>> {
+    const { page = 1, limit = 10 } = query;
+    const total = await this.memoryModel.countDocuments();
+
+    return {
+      items: await this.memoryModel
+        .find()
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async approve(id: string): Promise<Memory> {

@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { MemoriesService } from './memories.service';
 import { CreateMemoryDto } from './dto/create-memory.dto';
@@ -17,6 +18,9 @@ import { UserRole } from 'src/common/enums/user-role.enum';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { FindMemoriesDto } from './dto/find-memories.dto';
+import { PaginatedResponse } from 'src/products/interfaces/product-response.interface';
+import { MemoriesResponse } from './interfaces/memories-response.interface';
 
 @Controller('memories')
 export class MemoriesController {
@@ -41,13 +45,19 @@ export class MemoriesController {
   }
 
   @Get()
-  findAll() {
-    return this.memoriesService.findAll();
+  async findAll(
+    @Query() query: FindMemoriesDto,
+  ): Promise<PaginatedResponse<MemoriesResponse>> {
+    const { items, meta } = await this.memoriesService.findAll(query);
+    return { items, meta };
   }
 
   @Get('admin')
-  findMemories() {
-    return this.memoriesService.findMemories();
+  async findMemories(
+    @Query() query: FindMemoriesDto,
+  ): Promise<PaginatedResponse<MemoriesResponse>> {
+    const { items, meta } = await this.memoriesService.findMemories(query);
+    return { items, meta };
   }
 
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
