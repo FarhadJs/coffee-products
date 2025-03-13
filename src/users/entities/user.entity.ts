@@ -52,6 +52,9 @@ export class User {
 
   @Prop()
   social_link: string;
+
+  @Prop()
+  imagePath: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

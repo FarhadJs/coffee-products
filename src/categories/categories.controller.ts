@@ -10,6 +10,7 @@ import {
   // BadRequestException,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
   // Res,
   // NotFoundException,
 } from '@nestjs/common';
@@ -22,6 +23,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
+import { join } from 'path';
+import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
+import fs from 'fs';
 
 @Controller('categories')
 export class CategoriesController {
@@ -35,12 +41,42 @@ export class CategoriesController {
     @Body() createCategoryDto: CreateCategoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const categoryData = {
-      ...createCategoryDto,
-      imagePath: file ? `uploads/${file.filename}` : '',
-    };
+    if (file) {
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          'Invalid file type. Only JPEG, PNG, and GIF are allowed.',
+        );
+      }
 
-    const category = await this.categoriesService.create(categoryData);
+      const uniqueSuffix = uuidv4() + extname(file.originalname);
+      const outputFilePath = join(
+        __dirname,
+        '..',
+        '..',
+        'uploads',
+        `${uniqueSuffix}`,
+      );
+
+      // compress the file
+      await sharp(file.buffer)
+        .resize(800)
+        .toFormat('jpeg', { quality: 80 })
+        .toFile(outputFilePath);
+
+      const categoryData = {
+        ...createCategoryDto,
+        imagePath: file ? `uploads/${uniqueSuffix}` : '',
+      };
+
+      const category = await this.categoriesService.create(categoryData);
+      return {
+        message: 'دسته بندی با موفقیت ثبت شد',
+        data: category,
+      };
+    }
+
+    const category = await this.categoriesService.create(createCategoryDto);
     return {
       message: 'دسته بندی با موفقیت ثبت شد',
       data: category,
@@ -74,18 +110,63 @@ export class CategoriesController {
     @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const updateData = {
-      ...updateCategoryDto,
-      image: file
-        ? {
-            data: file.buffer,
-            contentType: file.mimetype,
-            filename: file.filename,
-          }
-        : undefined,
-      imagePath: file ? `uploads/${file.filename}` : '',
-    };
-    const category = await this.categoriesService.update(id, updateData);
+    const existingCategory = await this.categoriesService.findOne(id);
+    if (!existingCategory) {
+      throw new BadRequestException(`Product with ID ${id} not found`);
+    }
+
+    if (file) {
+      if (existingCategory.imagePath) {
+        const previousImagePath = join(
+          __dirname,
+          '..',
+          '..',
+          existingCategory.imagePath,
+        );
+        fs.unlink(previousImagePath, (err) => console.error(err));
+      }
+
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          'Invalid file type. Only JPEG, PNG, and GIF are allowed.',
+        );
+      }
+
+      const uniqueSuffix = uuidv4() + extname(file.originalname);
+      const outputFilePath = join(
+        __dirname,
+        '..',
+        '..',
+        'uploads',
+        `${uniqueSuffix}`,
+      );
+
+      // compress the file
+      await sharp(file.buffer)
+        .resize(800)
+        .toFormat('jpeg', { quality: 80 })
+        .toFile(outputFilePath);
+
+      const updateData = {
+        ...updateCategoryDto,
+        image: file
+          ? {
+              data: file.buffer,
+              contentType: file.mimetype,
+              filename: file.filename,
+            }
+          : undefined,
+        imagePath: `uploads/${uniqueSuffix}`,
+      };
+      const category = await this.categoriesService.update(id, updateData);
+      return {
+        message: 'دسته بندی با موفقیت ویرایش شد',
+        data: category,
+      };
+    }
+
+    const category = await this.categoriesService.update(id, updateCategoryDto);
     return {
       message: 'دسته بندی با موفقیت ویرایش شد',
       data: category,

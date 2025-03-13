@@ -27,6 +27,11 @@ import {
   PaginatedResponse,
   ProductResponse,
 } from './interfaces/product-response.interface';
+import { join } from 'path';
+import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
+import fs from 'fs';
 
 @Controller('products')
 export class ProductsController {
@@ -35,32 +40,73 @@ export class ProductsController {
   @Post()
   @Roles(UserRole.FOUNDER, UserRole.ADMIN)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    }),
+  )
   async create(
     @UploadedFile() file: Express.Multer.File,
     @Body() createProductDto: CreateProductDto,
   ) {
-    const productData = {
-      ...createProductDto,
-      image: file
-        ? { data: file.buffer, contentType: file.mimetype }
-        : undefined,
-      imagePath: file ? `uploads/${file.filename}` : '',
-      price: isNaN(Number(createProductDto.price))
-        ? 0
-        : Number(createProductDto.price),
-      discount: isNaN(Number(createProductDto.discount))
-        ? 0
-        : Number(createProductDto.discount),
-    };
+    if (file) {
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          'Invalid file type. Only JPEG, PNG, and GIF are allowed.',
+        );
+      }
+
+      const uniqueSuffix = uuidv4() + extname(file.originalname);
+      const outputFilePath = join(
+        __dirname,
+        '..',
+        '..',
+        'uploads',
+        `${uniqueSuffix}`,
+      );
+
+      // compress the file
+      await sharp(file.buffer)
+        .resize(800)
+        .toFormat('jpeg', { quality: 80 })
+        .toFile(outputFilePath);
+
+      if (
+        isNaN(Number(createProductDto.price)) &&
+        isNaN(Number(createProductDto.discount))
+      ) {
+        throw new BadRequestException(
+          'قیمت و تخفیف باید به صورت عدد وارد کنید',
+        );
+      }
+
+      const productData = {
+        ...createProductDto,
+        imagePath: file ? `uploads/${uniqueSuffix}` : '',
+        price: isNaN(Number(createProductDto.price))
+          ? 0
+          : Number(createProductDto.price),
+        discount: isNaN(Number(createProductDto.discount))
+          ? 0
+          : Number(createProductDto.discount),
+      };
+
+      const product = await this.productsService.create(productData);
+      return {
+        message: 'محصول با موفقیت ثبت شد',
+        data: product,
+      };
+    }
+
     if (
       isNaN(Number(createProductDto.price)) &&
-      isNaN(Number(createProductDto.price))
+      isNaN(Number(createProductDto.discount))
     ) {
       throw new BadRequestException('قیمت و تخفیف باید به صورت عدد وارد کنید');
     }
 
-    const product = await this.productsService.create(productData);
+    const product = await this.productsService.create(createProductDto);
     return {
       message: 'محصول با موفقیت ثبت شد',
       data: product,
@@ -141,15 +187,83 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const updateData = {
-      ...updateProductDto,
-      image: file
-        ? { data: file.buffer, contentType: file.mimetype }
-        : undefined,
-      imagePath: file ? `uploads/${file.filename}` : '',
-    };
+    const existingProduct = await this.productsService.findOne(id);
+    if (!existingProduct) {
+      throw new BadRequestException(`Product with ID ${id} not found`);
+    }
 
-    const updatedProduct = await this.productsService.update(id, updateData);
+    if (existingProduct.imagePath) {
+      const previousImagePath = join(
+        __dirname,
+        '..',
+        '..',
+        existingProduct.imagePath,
+      );
+      try {
+        fs.unlinkSync(previousImagePath);
+      } catch (error) {
+        console.error(`Failed to delete previous image: ${error}`);
+      }
+    }
+
+    if (file) {
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          'Invalid file type. Only JPEG, PNG, and GIF are allowed.',
+        );
+      }
+
+      const uniqueSuffix = uuidv4() + extname(file.originalname);
+      const outputFilePath = join(
+        __dirname,
+        '..',
+        '..',
+        'uploads',
+        `${uniqueSuffix}`,
+      );
+
+      // compress the file
+      await sharp(file.buffer)
+        .resize(800)
+        .toFormat('jpeg', { quality: 80 })
+        .toFile(outputFilePath);
+
+      const updateData = {
+        ...updateProductDto,
+        image: file
+          ? { data: file.buffer, contentType: file.mimetype }
+          : undefined,
+        imagePath: `uploads/${uniqueSuffix}`,
+      };
+
+      if (
+        isNaN(Number(updateProductDto.price)) &&
+        isNaN(Number(updateProductDto.discount))
+      ) {
+        throw new BadRequestException(
+          'قیمت و تخفیف باید به صورت عدد وارد کنید',
+        );
+      }
+
+      const updatedProduct = await this.productsService.update(id, updateData);
+      return {
+        message: 'محصول با موفقیت ویرایش شد',
+        data: updatedProduct,
+      };
+    }
+
+    if (
+      isNaN(Number(updateProductDto.price)) &&
+      isNaN(Number(updateProductDto.discount))
+    ) {
+      throw new BadRequestException('قیمت و تخفیف باید به صورت عدد وارد کنید');
+    }
+
+    const updatedProduct = await this.productsService.update(
+      id,
+      updateProductDto,
+    );
     return {
       message: 'محصول با موفقیت ویرایش شد',
       data: updatedProduct,

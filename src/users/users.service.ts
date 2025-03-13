@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,7 +13,6 @@ import { Model } from 'mongoose';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
   async create(createUserDto: CreateUserDto) {
-    console.log(createUserDto);
     const user = await this.userModel.create(createUserDto);
     return { message: 'کاربر با موفقیت ثبت شد', data: user };
   }
@@ -19,12 +22,15 @@ export class UsersService {
     return { data: users };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException('user not found!');
+    }
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    console.log(updateUserDto);
     if (updateUserDto.imagePath == '') delete updateUserDto.imagePath;
     const updated_user = await this.userModel.findByIdAndUpdate(
       id,

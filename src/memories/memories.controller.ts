@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { MemoriesService } from './memories.service';
 import { CreateMemoryDto } from './dto/create-memory.dto';
@@ -21,6 +22,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FindMemoriesDto } from './dto/find-memories.dto';
 import { PaginatedResponse } from 'src/products/interfaces/product-response.interface';
 import { MemoriesResponse } from './interfaces/memories-response.interface';
+import { join } from 'path';
+import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
 
 @Controller('memories')
 export class MemoriesController {
@@ -36,12 +41,38 @@ export class MemoriesController {
     @Body() createMemoryDto: CreateMemoryDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const memoriesData = {
-      ...createMemoryDto,
-      imagePath: file ? `uploads/${file.filename}` : '',
-    };
+    if (file) {
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          'Invalid file type. Only JPEG, PNG, and GIF are allowed.',
+        );
+      }
 
-    return await this.memoriesService.create(memoriesData);
+      const uniqueSuffix = uuidv4() + extname(file.originalname);
+      const outputFilePath = join(
+        __dirname,
+        '..',
+        '..',
+        'uploads',
+        `${uniqueSuffix}`,
+      );
+
+      // compress the file
+      await sharp(file.buffer)
+        .resize(800)
+        .toFormat('jpeg', { quality: 80 })
+        .toFile(outputFilePath);
+
+      const memoriesData = {
+        ...createMemoryDto,
+        imagePath: `uploads/${uniqueSuffix}`,
+      };
+
+      return await this.memoriesService.create(memoriesData);
+    }
+
+    return await this.memoriesService.create(createMemoryDto);
   }
 
   @Get()
