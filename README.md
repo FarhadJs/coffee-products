@@ -1,6 +1,6 @@
-# Coffee Products API
+# Coffee ACE API <img src="./ace.png" style="width:50px;" />
 
-A NestJS-based REST API for managing coffee products.
+A NestJS-based REST API for managing coffee ace.
 
 ## Features
 
@@ -14,68 +14,115 @@ A NestJS-based REST API for managing coffee products.
 
 ## Prerequisites
 
-- Docker
-- Docker Compose
 - Git
+- npm
+- nodejs
+- NestJS
 
 ## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone <your-repo-url>
+git clone <acecoffee-repo-url>
 cd coffee-products
+```
 
-    Create .env file:
+2. Create .env file:
 
+```bash
 cp .env.example .env
+```
 
-    Start the application:
+3. Start the application:
 
-docker-compose up -d
+```bash
+npm run start:prod
+```
 
-The API will be available at http://localhost:3000
-API Documentation
-Authentication
+##### The API will be available at http://localhost:3000
 
-    POST /auth/register - Register new user
-    POST /auth/login - Login user
+<hr />
 
-Products
+### API Documentation
 
-    GET /products - List all products
-    GET /products/:id - Get single product
-    POST /products - Create new product
-    PATCH /products/:id - Update product
-    DELETE /products/:id - Delete product
-    GET /products/search - Search products
-    GET /products/price-range - Filter by price range
+#### Authentication
 
-Categories
+- POST /auth/register - Register new user
+- POST /auth/login - Login user
+- GET /auth/profile - Get user profile
+- PATCH /auth/profile - Update user profile
 
-    GET /categories - List all categories
-    GET /categories/:id - Get single category
-    POST /categories - Create new category
-    PATCH /categories/:id - Update category
-    DELETE /categories/:id - Delete category
+#### Products
 
-Development
+- GET /products - List all products
+- GET /products/:id - Get single product
+- POST /products - Create new product
+- PATCH /products/:id - Update product
+- DELETE /products/:id - Delete product
+- GET /products/search - Search products
+- GET /products/price-range - Filter by price range
 
-To run the application in development mode:
+#### Categories
 
-docker-compose up
+- GET /categories - List all categories
+- GET /categories/:id - Get single category
+- POST /categories - Create new category
+- PATCH /categories/:id - Update category
+- DELETE /categories/:id - Delete category
 
-Testing
+#### Users
 
-# unit tests
-docker-compose exec api npm run test
+- GET /users - List all users
+- GET /users/:id - Get single user
+- POST /users - Create new user
+- PATCH /users/:id - Update user
+- DELETE /users/:id - Delete user
 
-# e2e tests
-docker-compose exec api npm run test:e2e
+#### Memories
 
-# test coverage
-docker-compose exec api npm run test:cov
+- GET /memories - List all memories
+- GET /memories/admin - List all memories (admin view)
+- POST /memories - Create new memory
+- PATCH /memories/:id - Approve memory
+- DELETE /memories/:id - Delete memory
 
-License
+#### Announcements
 
-MIT licensed
+- GET /announcements - List all announcements
+- POST /announcements - Create new announcement
+- DELETE /announcements/:id - Delete announcement
+
+<hr />
+
+## Development
+
+##### To run the application in development mode:
+
+```bash
+npm run start:dev
+```
+
+### Testing
+
+#### unit tests
+
+```bash
+npm run test
+```
+
+#### e2e tests
+
+```bash
+npm run test:e2e
+```
+
+#### test coverage
+
+```bash
+npm run test:cov
+```
+
+# License
+
+#### MIT licensed
