@@ -34,6 +34,10 @@ export class CreateUserDto {
 
   @IsString()
   @IsOptional()
+  position: string;
+
+  @IsString()
+  @IsOptional()
   social_link: string;
 
   @IsString()
